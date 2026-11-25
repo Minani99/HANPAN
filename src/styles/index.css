@@ -1,0 +1,232 @@
+@import 'tailwindcss';
+
+/*
+ * HANPAN Design System v3 토큰
+ * 기준: hanpan_v3_design_spec.md / hanpan_v3_design_lab.html("HANPAN V3 - calm editorial UI system")
+ * - 글자 크기는 rem(루트 16px 기준)으로 정의해 브라우저 글자 확대(200%)에 대응한다.
+ * - 간격은 Tailwind 기본 배수(--spacing: 0.25rem = 4px)를 그대로 사용한다.
+ *   1=4px, 2=8px, 3=12px, 4=16px, 6=24px, 8=32px, 12=48px.
+ * - Tailwind 기본 팔레트/글꼴/크기는 초기화해 시스템 밖의 색(주황 등)이 섞이지 않게 한다.
+ */
+@theme {
+  /* 브레이크포인트: 시안의 모바일 기준(max-width:760px)을 모바일 퍼스트로 뒤집는다. */
+  --breakpoint-*: initial;
+  --breakpoint-sm: 381px; /* 381px 이상: 일반 모바일 (380px 이하는 소형 단말) */
+  --breakpoint-md: 761px; /* 761px 이상: 데스크톱 레이아웃 */
+
+  /* 색상 */
+  --color-*: initial;
+  --color-ink: #191b1e;
+  --color-ink-hover: #2e3237;
+  --color-text: #42464b;
+  --color-muted: #707781;
+  --color-border: #e5e8eb;
+  --color-border-strong: #c9ced4; /* 입력 hover 테두리 */
+  --color-skeleton: #eef0f2;
+  --color-surface: #ffffff;
+  --color-soft: #f6f7f8;
+  --color-focus: #486aa7;
+  --color-hover: #fafafb;
+  --color-genre-bg: #f1f3f5;
+  --color-genre-text: #4f5964;
+  --color-status-bg: #eceff1;
+  --color-status-text: #555e68;
+  --color-placeholder-bg: #f1f3f5;
+  --color-placeholder-motif: #a3aab2;
+  --color-disabled-bg: #eceef0;
+  --color-disabled-text: #626970;
+  --color-overlay: rgb(0 0 0 / 0.533);
+  --color-white: #ffffff;
+  --color-black: #000000;
+  /* 의미 색: 흰 배경·옅은 배경 모두에서 AA(4.5:1) 이상. 항상 텍스트와 함께 사용한다. */
+  --color-danger: #b42318;
+  --color-danger-soft: #fef3f2;
+  --color-success: #067647;
+  --color-success-soft: #ecfdf3;
+  --color-warning: #7a4a00;
+  --color-warning-soft: #fff8e6;
+
+  /* 글꼴 */
+  --font-*: initial;
+  --font-sans: 'SUIT Variable', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Noto Sans CJK KR', sans-serif;
+  --font-brand: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* 글자 크기 (rem) */
+  --text-*: initial;
+  --text-eyebrow: 0.6875rem; /* 11px — 장식 eyebrow 전용, 정보 텍스트 금지 */
+  --text-xs: 0.75rem; /* 12px — 정보 텍스트 최소 크기 */
+  --text-chip-sm: 0.78125rem; /* 12.5px */
+  --text-sm: 0.8125rem; /* 13px */
+  --text-sm-plus: 0.84375rem; /* 13.5px */
+  --text-md: 0.875rem; /* 14px */
+  --text-base: 0.9375rem; /* 15px */
+  --text-input-mobile: 1rem; /* 16px — 모바일 입력란(iOS 포커스 확대 방지) */
+  --text-lg: 1.1875rem; /* 19px */
+  --text-xl: 1.25rem; /* 20px */
+  --text-2xl: 1.3125rem; /* 21px */
+  --text-3xl: 1.375rem; /* 22px — 상세 제목(모바일), 섹션 제목 */
+  --text-4xl: 1.75rem; /* 28px — 상세 제목(데스크톱) */
+  --text-arrow: 1.4375rem; /* 23px */
+  --text-brand-sm: 1.5rem; /* 24px */
+  --text-brand: 1.6875rem; /* 27px */
+  --text-hero-sm: 1.875rem; /* 30px */
+  --text-hero: clamp(2.1875rem, 4vw, 3.1875rem); /* 35px ~ 51px */
+
+  /* 굵기 */
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-strong: 650;
+  --font-weight-bold: 700;
+  --font-weight-title: 720;
+  --font-weight-heavy: 750;
+  --font-weight-extrabold: 800;
+  --font-weight-black: 900;
+
+  /* 행간 */
+  --leading-*: initial;
+  --leading-none: 1;
+  --leading-hero: 1.21;
+  --leading-tight: 1.35;
+  --leading-snug: 1.4;
+  --leading-title: 1.45;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.6;
+  --leading-loose: 1.65;
+
+  /* 자간 */
+  --tracking-*: initial;
+  --tracking-body: -0.012em;
+  --tracking-normal: 0;
+  --tracking-meta: -0.15px;
+  --tracking-tight: -0.2px;
+  --tracking-title-sm: -0.3px;
+  --tracking-title: -0.65px;
+  --tracking-detail: -0.5px;
+  --tracking-aside: -0.9px;
+  --tracking-section: -1px;
+  --tracking-hero-sm: -1.3px;
+  --tracking-brand: -1.5px;
+  --tracking-hero: -2.6px;
+  --tracking-label: 1px;
+  --tracking-eyebrow-sm: 1.5px;
+  --tracking-eyebrow: 2.2px;
+
+  /* 모서리 */
+  --radius-*: initial;
+  --radius-xs: 4px;
+  --radius-sm: 5px; /* 배지 */
+  --radius-md: 7px; /* 썸네일, 모바일 날짜 칸 */
+  --radius-lg: 8px; /* 버튼, 입력, 칩, 카드 */
+  --radius-xl: 9px; /* 모바일 빠른 메뉴 */
+  --radius-2xl: 10px;
+  --radius-dialog: 12px;
+  --radius-full: 9999px;
+
+  /* 컨트롤 높이·레이아웃 치수 (min-h-*, h-*, w-*, basis-* 등에 사용) */
+  --spacing-cta: 3.25rem; /* 52px Primary CTA */
+  --spacing-control: 3rem; /* 48px 보조 버튼·입력 */
+  --spacing-control-sm: 2.75rem; /* 44px 작은 보조 버튼 */
+  --spacing-chip: 2.75rem; /* 44px 칩 (데스크톱) */
+  --spacing-chip-sm: 2.625rem; /* 42px 칩 (모바일) */
+  --spacing-touch: 2.75rem; /* 44px 최소 터치 영역 */
+  --spacing-header: 4.5rem; /* 72px */
+  --spacing-header-sm: 4rem; /* 64px */
+  --spacing-bottom-nav: 4.5rem; /* 72px */
+  --spacing-bottom-nav-item: 4rem; /* 64px */
+  --spacing-gutter: 1.75rem; /* 28px 데스크톱 좌우 여백 */
+  --spacing-gutter-sm: 1.125rem; /* 18px 모바일 좌우 여백 */
+  --spacing-filter-label: 164px; /* 데스크톱 필터 라벨 열 */
+
+  /* 최대 폭 */
+  --container-page: 1190px;
+  --container-dialog: 550px;
+  --container-dialog-sm: 440px;
+
+  --animate-skeleton: skeleton-pulse 1.6s ease-in-out infinite;
+
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+}
+
+:root {
+  /* 모바일 하단 내비가 차지하는 높이(기기 safe-area 포함). 본문 하단 여백과 토스트 위치에 사용. */
+  --bottom-nav-offset: calc(var(--spacing-bottom-nav) + env(safe-area-inset-bottom, 0px));
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    letter-spacing: var(--tracking-body);
+    line-height: var(--leading-normal);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /*
+   * 기본 outline 색을 포커스 색으로 둔다. Tailwind의 transition-colors는 outline-color도 애니메이션하므로,
+   * 기본값(currentColor)이 남아 있으면 포커스 순간 링이 검게 보였다가 파랗게 바뀐다.
+   */
+  *,
+  ::before,
+  ::after {
+    outline-color: var(--color-focus);
+  }
+
+  /* 전역 포커스 표시: 마우스 클릭에는 나타나지 않고 키보드 이동에서만 보인다. */
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/* 가로 스크롤 영역(날짜·칩)에서 스크롤바를 숨긴다. 스크롤 자체는 유지된다. */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 한국어 제목 줄바꿈: 어절 단위로 끊되, 긴 영문/숫자 덩어리는 넘치지 않게 끊는다. */
+@utility text-wrap-ko {
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}

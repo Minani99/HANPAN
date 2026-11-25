@@ -1,0 +1,10 @@
+{
+  "$comment": "개발용 mock seed에만 존재하는 고유 문자열. scripts/check-no-seed.mjs가 dist/에서 이 값을 찾으면 실패한다. src/data/mock/seed.ts(예시 모임·개발용 테스트 계정)와 함께 수정하고, src/data/mock/seed.test.ts가 동기화 여부를 검사한다.",
+  "marker": "HANPAN_DEV_SEED_MARKER",
+  "uniqueStrings": [
+    "[예시] 퇴근 후 가볍게 즐기는 파티게임 모임, 초보도 환영해요",
+    "보드게임 카페 A 둔산점 2층 단체석 안쪽 넓은 테이블",
+    "일반 사용자 · 예시 모임 주최·신청 내역 있음",
+    "예시신규사용자"
+  ]
+}
