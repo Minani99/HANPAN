@@ -13,6 +13,10 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
+  // CI 러너(GitHub Actions 4 vCPU → 2 workers)는 이 개발 PC보다 느리고 Vite 개발 서버가 첫 요청에 변환을 한다.
+  // 로컬에서 20~25초 걸리는 테스트(6개 뷰포트 순회·참가자 관리 흐름)가 기본 30초에 걸리지 않게 CI에서만 늘린다(로컬 값은 그대로).
+  timeout: process.env.CI ? 60_000 : 30_000,
+  expect: { timeout: process.env.CI ? 10_000 : 5_000 },
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : [['list']],
   use: {
     baseURL: BASE_URL,

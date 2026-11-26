@@ -1,10 +1,42 @@
 # 변경 기록
 
-상태: Phase 5까지 기록 (2026-11-25)
+상태: 출시 전 마무리까지 기록 (2026-11-25)
 
 형식은 [Keep a Changelog](https://keepachangelog.com/ko/1.1.0/)를 따른다. 각 항목에는 실제로 끝난 작업과 실제로 실행한 검증만 적는다.
 
 ## [Unreleased]
+
+### 추가 — 출시 전 마무리 (CI·시간대·문서, 2026-11-25)
+
+커밋·푸시하지 않았다(GitHub에 올린 것 없음). 새 의존성 없음. 마이그레이션 1~9·루트 원본 문서 4개·v3 디자인(토큰·레이아웃·모양)은 고치지 않았다.
+
+- **GitHub Actions CI** `.github/workflows/ci.yml`: `main` push·`main` 대상 PR·수동 실행. `permissions: contents: read`, 같은 ref의 이전 실행 취소(`concurrency`), `timeout-minutes: 40`, secrets 없음(Supabase env 없이 빌드 → unconfigured). ubuntu-24.04(UTC)에서 checkout(`persist-credentials: false`) → setup-node(`.nvmrc`, npm 캐시) → `npm ci` → `npm run verify` → `npm run test:tz` → `npx playwright install --with-deps chromium` → `npm run test:e2e` → `npm run test:csp` → `npm run check:builds`, 실패 시 `playwright-report/`·`test-results/`를 artifact(7일). actions는 `actions/checkout@v5`·`actions/setup-node@v5`·`actions/upload-artifact@v5` — 이 PC에서 버전을 확인할 수 없어 주석에 "첫 실행 때 확인"으로 표시.
+- CI 환경 점검(스크립트를 읽고 로컬에서 확인): Windows 경로·`cmd` 문법·로컬 캐시 경로 가정 없음(스크립트는 `node:path`·`process.execPath`·`node_modules/.tmp`), 순서가 중요한 `readdirSync`는 모두 정렬, 상대 import 923개가 디스크 대소문자와 일치(Linux는 대소문자 구분), Git 인덱스 경로 303개도 디스크와 대소문자 일치, `package-lock.json`에 Linux x64용 네이티브 패키지(rolldown·tailwind oxide·lightningcss) 있음, `npm ls --all` exit 0(오류 없음 — `UNMET OPTIONAL`은 다른 플랫폼 바이너리·선택 peer뿐), lockfile 루트 의존성 = package.json.
+- Playwright 설정 CI 보정(로컬 값은 그대로): `playwright.config.ts` — CI에서 테스트 제한 60초·`expect` 10초(로컬에서 20~25초 걸리는 테스트가 있어 느린 러너에서 기본 30초에 걸릴 수 있음). `playwright.csp.config.ts` — CI에서 1회 재시도(글꼴 CDN 응답도 확인), HTML 리포트(`playwright-report/csp`), 출력 폴더 `test-results/csp`(E2E 결과와 겹치지 않게). `reuseExistingServer`(E2E는 CI에서 끔, CSP는 항상 끔)·포트(5179, 4179·4180 — 사용자 미리보기 5173과 겹치지 않음)는 그대로 맞다.
+- **시간대**: `npm run test:tz`(`scripts/test-tz.mjs`) — 단위·컴포넌트 테스트를 다른 시스템 시간대로 한 번 더(기본 America/Los_Angeles, 인자로 여러 개). 자식 프로세스에 TZ를 직접 넘기고 적용 여부를 먼저 확인(모르는 이름은 실패), `src/test/setup.ts`가 `HANPAN_TEST_TZ`와 실제 시간대를 비교. E2E `e2e/timezone.spec.ts`(6개 = 3개 × LA·UTC 브라우저): `page.clock`으로 KST 자정 직전·직후에 고정해 날짜 칸의 오늘·날짜 필터·목록/상세 시각·모임 만들기 날짜·시간 저장(상세 `datetime`·수정 화면 왕복)을 KST로 확인.
+- 문서: README 첫머리(소개·현재 상태 표 — MVP·배포 전·mock 데이터·Supabase 미연결·CI, 빠른 시작, 문서 링크 표), 명령어 표(`test:tz`, E2E 시간대), "CI" 절(무엇을 돌리는지·첫 push 뒤 Actions 탭에서 확인할 것, 배지 없음), 폴더 구조. NEXT_STEPS(Git 원격 저장소 완료 — `Minani99/HANPAN`·`main`, CI 준비, 결정 #11 저장소 라이선스·#12 디자인 시안 사진 라이선스·#13 Dependabot), DEPLOYMENT(§1 Git 저장소 준비됨, §11 CI), TEST_PLAN(§1 시간대·CI 행, §2 #4, §6, §7-12, §10 결과).
+- 공개 저장소 점검: README·docs에서 개인 정보(이름·이메일·회사)·이 PC 경로(`C:\Users\...`)를 grep — 해당 없음(예시 주소 `race-…@example.invalid`, `NODE_TLS_REJECT_UNAUTHORIZED` 권고 문구는 그대로).
+
+### 수정 — 출시 전 마무리 (2026-11-25)
+
+- **mock `adminCancelMeeting` 판단 순서를 DB `cancel_meeting`과 같게**: 계정 확인(로그인·탈퇴 요청) → 모임 존재(없거나 볼 수 없는 숨김 모임이면 `NOT_FOUND`) → 권한(관리자가 아니면 `NOT_ADMIN`). 전에는 일반 사용자가 없는 모임을 관리자 취소하면 mock은 `NOT_ADMIN`, Supabase 어댑터는 `NOT_FOUND`였다(`src/data/mock/rules.ts`).
+- 테스트: 계약 테스트 "일반 사용자는 관리자 메서드가 전부 NOT_ADMIN"에 없는 모임·숨김 모임의 관리자 취소가 Supabase 어댑터(실제 SQL)와 mock에서 모두 `NOT_FOUND`인지 단언 추가(테스트 수 28 그대로, 비교 도우미 `codeOf`를 파일 위로 옮김). `src/data/mock/phase4.test.ts`에 같은 단언(비로그인은 `AUTH_REQUIRED`). 고치기 전 mock으로 두 테스트가 `NOT_ADMIN`으로 실패하는 것을 확인한 뒤 되돌림.
+
+### 발견 — 출시 전 마무리 (2026-11-25)
+
+- **시간대 버그는 없었다**: 앱 코드는 이미 모든 날짜·시각 계산을 `Intl.DateTimeFormat`(`timeZone: 'Asia/Seoul'`)로 해서 기기 시간대에 기대지 않는다. 단위 테스트 전체가 UTC·America/Los_Angeles에서 통과했고, 새 E2E도 LA·UTC 브라우저에서 통과했다. `src/` 앱 코드의 시간대 의존 API(`getHours`·`setHours`·`toLocaleString` 등) 사용 0건.
+- **테스트 실행 방법의 함정**: Windows Git Bash에서 `TZ=America/Los_Angeles npm run test`는 MSYS가 `/`가 든 TZ 값을 Windows 프로그램에 넘기지 않아 아무 표시 없이 KST로 돈다(`TZ=UTC`는 넘어간다). 그래서 `npm run test:tz`를 만들었다. 이전 문서의 "`TZ=America/Los_Angeles`에서도 통과" 확인은 이 방식이었다면 실제로는 KST였을 수 있다(date.test.ts 안의 시간대 전환 테스트는 별개로 유효).
+- mock과 DB의 남은 차이(고치지 않음): (1) 일반 사용자가 **자기가 연 모임**에 `adminCancelMeeting`을 부르면 DB는 모임장 취소로 성공(시작 전), mock은 `NOT_ADMIN`. 화면은 관리자에게만 관리자 취소를 보여 주므로 실제 경로는 없다. (2) 취소 사유 200자 초과 검사 순서: DB는 모임 확인 전, mock(`cancelMeeting`)은 마지막.
+- 디자인 시안 사진: `hanpan_v3_design_lab.html`에 내장된 사진은 서로 다른 JPEG **4장**(히어로 1 + 썸네일 3)이다. 출처 미확인 — NEXT_STEPS #12.
+
+### 검증 — 출시 전 마무리 (2026-11-25, 실제 실행)
+
+- `npm run verify` 통과: test **52개 파일 438개**, test:db **13개 파일 232개**, build, check:seed, check:dist.
+- `npm run test:tz -- UTC America/Los_Angeles`: **438개 × 2 통과**(자식 프로세스 시간대 확인 포함).
+- `npm run test:e2e` **69개 통과**(63 + 시간대 6). `npm run test:csp` **5개 통과**. `npm run check:builds` **15/15 통과**.
+- CI 설정 경로: `CI=true TZ=UTC`로 test:e2e(69)·test:csp(5) 통과, HTML 리포트·trace 폴더가 서로 덮어쓰지 않음. 같은 설정 + `--workers=2`(CI 러너와 같은 worker 수) E2E 69개 3.9분, 가장 긴 테스트 20.0초.
+- `npm run screenshots`는 돌리지 않았다(화면 모양 변경 없음).
+- **미검증**: GitHub Actions에서의 실제 실행(푸시 전), actions 메이저 버전(v5) 존재·Node 런타임 경고, Linux 러너의 글꼴·속도에 따른 E2E 시간.
 
 ### 수정 — Phase 5 검수 반영 (2026-11-25)
 

@@ -80,6 +80,14 @@ async function expectCode(promise: Promise<unknown>, code: string, detail?: stri
   expect(error).toMatchObject(detail === undefined ? { code } : { code, detail });
 }
 
+/** 어댑터 호출 결과: 성공이면 'OK', 실패면 오류 code (Supabase 어댑터와 mock 결과 비교용) */
+function codeOf(promise: Promise<unknown>): Promise<string> {
+  return promise.then(
+    () => 'OK',
+    (caught: unknown) => (caught as { code: string }).code,
+  );
+}
+
 /** fake.signInAs + 어댑터로 한 번 호출 */
 async function as<T>(userId: string, work: () => Promise<T>): Promise<T> {
   fake.signInAs(userId);
@@ -570,6 +578,26 @@ describe('계약: 관리자', () => {
       (caught: unknown) => caught as { code: string },
     );
     expect(mockError?.code).toBe(cancelError?.code);
+    // 없는 모임·볼 수 없는 숨김 모임: cancel_meeting은 계정 확인 → 모임 존재 → 권한 순서라 NOT_FOUND가 NOT_ADMIN보다 먼저다. mock도 같은 순서
+    const hiddenId = await as(host, () => adapter.createMeeting(input({ title: '숨김 대상 모임' })));
+    const admin = await db.createUser({ admin: true });
+    await as(admin, () => adapter.adminSetMeetingHidden(hiddenId, true, '확인'));
+    fake.signInAs(user);
+    const missingId = '00000000-0000-4000-8000-000000000000';
+    const notFound = {
+      real: {
+        missing: await codeOf(adapter.adminCancelMeeting(missingId, null)),
+        hidden: await codeOf(adapter.adminCancelMeeting(hiddenId, null)),
+      },
+      mock: {
+        missing: await codeOf(mock.adminCancelMeeting('no-such-meeting', null)),
+        hidden: await codeOf(mock.adminCancelMeeting('seed-meeting-16', null)),
+      },
+    };
+    expect(notFound.real).toEqual({ missing: 'NOT_FOUND', hidden: 'NOT_FOUND' });
+    expect(notFound.mock).toEqual(notFound.real);
+    expect(await as(admin, () => adapter.getMeeting(hiddenId))).toMatchObject({ status: 'open' });
+    fake.signInAs(user);
     await expectCode(adapter.adminSearchUsers(''), 'NOT_ADMIN');
     await expectCode(adapter.adminSetUserStatus(host, 'restricted', null), 'NOT_ADMIN');
     await expectCode(adapter.adminListVenues(), 'NOT_ADMIN');
@@ -595,11 +623,6 @@ describe('계약: 관리자', () => {
       await as(admin, () => adapter.adminSetMeetingHidden(meetingId, true, '준비'));
       await db.asOwner((q) => q.query('update public.profiles set status = $2 where id = $1', [admin, status]));
       fake.signInAs(admin);
-      const codeOf = (promise: Promise<unknown>) =>
-        promise.then(
-          () => 'OK',
-          (caught: unknown) => (caught as { code: string }).code,
-        );
       const real = {
         session: await adapter.auth.getSessionUser(),
         profileIsAdmin: (await adapter.getMyProfile())?.isAdmin,

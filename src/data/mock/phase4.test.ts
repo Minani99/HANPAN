@@ -203,6 +203,10 @@ describe('mock: 관리자 — 관리자 dev 계정만, 나머지는 NOT_ADMIN', 
     ];
     for (const call of calls) await expect(call).rejects.toMatchObject({ code: 'NOT_ADMIN' });
     await expect(adapterAs(null).adminListVenues()).rejects.toMatchObject({ code: 'AUTH_REQUIRED' });
+    // 관리자 취소는 DB cancel_meeting과 같은 순서(계정 → 모임 존재 → 권한): 없는 모임·볼 수 없는 숨김 모임은 NOT_ADMIN보다 NOT_FOUND가 먼저
+    await expect(adapter.adminCancelMeeting('no-such-meeting', null)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(adapter.adminCancelMeeting('seed-meeting-16', null)).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    await expect(adapterAs(null).adminCancelMeeting('no-such-meeting', null)).rejects.toMatchObject({ code: 'AUTH_REQUIRED' });
   });
 
   it.each(['restricted', 'deletion_requested'] as const)(

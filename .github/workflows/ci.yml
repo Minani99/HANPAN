@@ -1,0 +1,84 @@
+# HANPAN CI: main push, main 대상 PR, 수동 실행에서 출시 전 검증 전체를 돌린다(README "CI", docs/TEST_PLAN.md §1).
+#
+# - 비밀 값(secrets)을 쓰지 않는다. Supabase env가 없으므로 운영 빌드는 unconfigured(빈 상태) 모드이고,
+#   E2E·CSP 스모크는 mock 데이터·가짜 Supabase env로 돈다. 실제 Supabase·외부 서비스에는 접속하지 않는다
+#   (외부 요청은 npm 레지스트리·Playwright 브라우저 다운로드·글꼴 CDN(jsDelivr)뿐).
+# - 러너는 UTC다. 단위 테스트는 UTC(npm run test, verify 안)와 America/Los_Angeles(npm run test:tz)로 두 번 돈다.
+#   E2E 브라우저 시간대는 Asia/Seoul로 고정(playwright.config.ts)이고, e2e/timezone.spec.ts만 LA·UTC로 바꿔 KST 표시를 확인한다.
+# - 공식 actions만 메이저 버전 태그로 쓴다. 이 파일을 만든 PC에서는 버전을 확인할 수 없었다 → 첫 실행 때 확인
+#   (Actions 로그의 "Download action repository" 줄, Node 런타임 경고, 각 저장소 Releases):
+#     actions/checkout@v5, actions/setup-node@v5, actions/upload-artifact@v5
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# 최소 권한: 코드 읽기만(푸시·PR 댓글·배포 없음)
+permissions:
+  contents: read
+
+# 같은 ref(브랜치·PR)에 새 실행이 오면 이전 실행을 취소한다
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: verify · test:tz · e2e · csp · builds
+    # ubuntu-latest 대신 고정: Playwright --with-deps가 지원하는 배포판이어야 한다(첫 실행 때 확인)
+    runs-on: ubuntu-24.04
+    # 예상 약 20분(verify 5 · test:tz 1 · 브라우저 설치 2 · E2E 6~9 · CSP 2 · 빌드 변형 3). 첫 실행 시간을 보고 조정
+    timeout-minutes: 40
+    env:
+      # 러너 기본값과 같지만 명시한다(단위 테스트·빌드의 시스템 시간대)
+      TZ: UTC
+    steps:
+      - name: 코드 받기
+        uses: actions/checkout@v5 # 첫 실행 때 확인
+        with:
+          # 이후 단계에서 git push 등을 하지 않으므로 토큰을 .git/config에 남기지 않는다
+          persist-credentials: false
+
+      - name: Node.js 설치(.nvmrc)
+        uses: actions/setup-node@v5 # 첫 실행 때 확인
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: 의존성 설치(npm ci)
+        run: npm ci
+
+      - name: 검증(typecheck · lint · test · test:db · build · check:seed · check:dist)
+        run: npm run verify
+
+      - name: 단위 테스트 다른 시간대(America/Los_Angeles)
+        run: npm run test:tz
+
+      - name: Playwright Chromium 설치
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E(mock)
+        run: npm run test:e2e
+
+      - name: CSP 스모크(빌드 결과 + 생성된 _headers)
+        run: npm run test:csp
+
+      - name: 운영 빌드 변형 검증
+        run: npm run check:builds
+
+      - name: 실패 시 Playwright 리포트·trace 올리기
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v5 # 첫 실행 때 확인
+        with:
+          name: playwright-report-attempt-${{ github.run_attempt }}
+          # E2E: playwright-report/, test-results/ · CSP 스모크: playwright-report/csp/, test-results/csp/
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
+          if-no-files-found: ignore

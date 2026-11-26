@@ -1,14 +1,48 @@
 # HANPAN (한판)
 
-대전 지역 보드게임 모임을 날짜·지역·게임 유형으로 찾고 참가하는 웹서비스의 MVP 프론트엔드입니다.
-서비스명·브랜드는 가칭이며, 현재 **Phase 5(출시 전 QA·접근성·보안 점검, Cloudflare Pages 배포 준비)**까지 마쳤습니다. 실제 배포는 하지 않았습니다(사용자 승인·외부 설정 필요 — [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) 출시 체크리스트).
-탐색·상세·신청·모임 만들기/수정·내 모임·참가자 관리·로그인/프로필·공간·신고·관리자 도구·정책 화면이 설정이 없으면 **개발용 mock 데이터**로,
-Supabase 환경 변수 2개를 넣으면 **Supabase(DB·RPC·Google/Kakao OAuth)**로 동작합니다.
-실제 Supabase 프로젝트·OAuth 콘솔 설정은 아직 없어서 **실제 연결은 확인하지 못했습니다(`BLOCKED`)** — DB 규칙은 PGlite 테스트, 어댑터는 계약 테스트로 확인했습니다.
+대전 지역 보드게임 모임을 날짜·지역·게임 유형으로 찾고 참가하는 웹서비스입니다. 이 저장소는 그 MVP(React 프론트엔드 + Supabase DB 마이그레이션·테스트)입니다.
+서비스명·브랜드는 가칭입니다.
+
+## 현재 상태
+
+| 항목 | 상태 |
+|---|---|
+| 단계 | **MVP**. Phase 0~5(출시 전 QA·접근성·보안 점검, Cloudflare Pages 배포 준비)까지 마쳤습니다 |
+| 배포 | **배포 전**입니다. 공개 서비스 주소가 없습니다. 배포에는 사용자 승인과 외부 설정이 필요합니다([출시 체크리스트](docs/NEXT_STEPS.md)) |
+| 데이터 | 개발 서버는 **개발용 mock 데이터**로 동작합니다. 모임·공간·계정은 모두 가상이고, 모임 제목은 `[예시]`로 시작합니다. 실제 모임이 아닙니다 |
+| Supabase | **실제 프로젝트에 연결하지 않았습니다**(`BLOCKED`). 어댑터·마이그레이션 코드는 준비돼 있어 환경 변수 2개를 넣으면 Supabase(DB·RPC·Google/Kakao OAuth)로 동작하지만, 실제 연결은 확인하지 못했습니다. DB 규칙은 PGlite 테스트, 어댑터는 계약 테스트로 확인했습니다 |
+| CI | GitHub Actions 워크플로를 준비했습니다([CI](#ci)) |
+
+화면: 탐색·상세·신청·모임 만들기/수정·내 모임·참가자 관리·로그인/프로필·공간·신고·관리자 도구·정책.
+
+## 빠른 시작
+
+```bash
+npm ci                 # package-lock.json 그대로 설치 (Node.js 22.22.0 이상, .nvmrc = 24.18.0)
+npm run dev            # http://localhost:5173 — 개발용 mock 데이터로 동작
+```
+
+- 로그인은 로그인 화면 아래 **"개발용 테스트 계정"** 목록에서 고릅니다(실제 OAuth가 아님 — [개발용 테스트 계정](#개발용-테스트-계정-mock-전용-실제-사용자-아님)).
+- 전체 검증은 `npm run verify`(타입·린트·단위·DB·빌드·산출물 점검)입니다.
+- E2E는 브라우저를 한 번 설치한 뒤 실행합니다: `npx playwright install chromium` → `npm run test:e2e`.
+
+## 문서
+
+| 문서 | 내용 |
+|---|---|
+| [docs/NEXT_STEPS.md](docs/NEXT_STEPS.md) | 출시 체크리스트: 사용자 결정, 외부 설정, 남은 일 |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Supabase·OAuth·Cloudflare Pages 설정과 배포·롤백 절차 |
+| [docs/TEST_PLAN.md](docs/TEST_PLAN.md) | 테스트 레벨·명령·최근 결과 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | 구조, 데이터 계층, 환경 변수 |
+| [docs/DB_SCHEMA.md](docs/DB_SCHEMA.md) | 테이블·RLS·RPC·오류 코드 |
+| [docs/SECURITY.md](docs/SECURITY.md) | 권한 모델, 보안 헤더·CSP, 의존성 |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | 운영 규정, 관리자 도구, 모니터링·백업·사고 대응 |
+| [docs/PRD.md](docs/PRD.md) · [docs/UI_SPEC.md](docs/UI_SPEC.md) | 요구사항, 화면 명세 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) · [docs/BACKLOG.md](docs/BACKLOG.md) · [docs/CHANGELOG.md](docs/CHANGELOG.md) | 단계별 계획, 보류 기능, 변경 기록 |
+| [docs/policies/](docs/policies/) | 이용약관·개인정보처리방침 초안(법률 검토 전) |
 
 - 디자인 기준: `hanpan_v3_design_spec.md`, `hanpan_v3_design_lab.html` (v3, 잉크 블랙)
 - 상위 요구사항: `HANPAN_Claude_Code_전체개발_마스터프롬프트.md`
-- 설계·운영 문서: `docs/`
 
 ## 요구 환경
 
@@ -17,19 +51,6 @@ Supabase 환경 변수 2개를 넣으면 **Supabase(DB·RPC·Google/Kakao OAuth)
 | Node.js | 22.22.0 이상 (React Router 8 요구사항). 개발 확인·배포 지정: 24.18.0 (`.nvmrc`) |
 | npm | 10 이상. 개발 확인: 11.16.0 |
 | 브라우저(E2E) | Playwright Chromium (chromium-1248, `@playwright/test` 1.64.1) |
-
-## 설치와 실행
-
-```bash
-npm install
-npm run dev            # http://localhost:5173 (개발용 예시 데이터로 동작)
-```
-
-E2E 테스트용 브라우저가 없다면 한 번 설치합니다.
-
-```bash
-npx playwright install chromium
-```
 
 ## 명령어
 
@@ -42,15 +63,37 @@ npx playwright install chromium
 | `npm run typecheck` | TypeScript 검사 (strict) |
 | `npm run lint` | ESLint (flat config, typescript-eslint, react-hooks) — `src`, `e2e`, `supabase/tests`, `scripts` |
 | `npm run test` | 단위·컴포넌트 테스트 (Vitest + React Testing Library + jsdom) |
+| `npm run test:tz` | 단위·컴포넌트 테스트를 다른 시스템 시간대로 한 번 더(기본 America/Los_Angeles, `npm run test:tz -- UTC Pacific/Kiritimati`처럼 지정). 시간대가 실제로 적용됐는지 먼저 확인한다. Git Bash의 `TZ=America/Los_Angeles npm run test`는 시간대가 넘어가지 않으므로(`/`가 든 값) 이 명령을 쓴다 |
 | `npm run test:db` | DB 테스트 (PGlite: 마이그레이션·GRANT·RLS·RPC 규칙 + Supabase 어댑터 계약 테스트) |
 | `npm run db:bundle` | 마이그레이션을 한 파일로 묶기 → `supabase/.bundle/all-migrations.sql` (Git 제외, seed 미포함, SQL Editor 붙여 넣기용) |
-| `npm run test:e2e` | E2E 테스트 (Playwright, Chromium, mock) — 개발 서버를 자동으로 띄웁니다. 접근성(axe 390·1280px, 키보드, 글자 200%) 포함 |
+| `npm run test:e2e` | E2E 테스트 (Playwright, Chromium, mock) — 개발 서버(포트 5179)를 자동으로 띄웁니다. 접근성(axe 390·1280px, 키보드, 글자 200%), 브라우저 시간대가 KST가 아닐 때(LA·UTC)의 KST 표시·저장 포함 |
 | `npm run test:csp` | CSP 스모크 테스트 — 빌드 2종(mock·가짜 Supabase env)을 임시 폴더에 만들고 생성된 `_headers`를 붙여 주요 화면의 CSP 위반 0건 확인(끝나면 임시 폴더 삭제). verify에는 없음 |
 | `npm run screenshots` | 홈 6개 뷰포트 + 상세·만들기(390/1280)·내 모임(390)·참가자 관리(1280)·로그인(390) → `docs/screenshots/phase1`, 공간 목록(390/1280)·공간 상세(390)·관리자 신고 탭(1280)·운영정책(390) → `docs/screenshots/phase4`, 글자 200% 대표 화면 5장 → `docs/screenshots/phase5`, 비교용 시안 → `docs/screenshots/reference` |
 | `npm run check:seed` | `dist/`에 개발용 seed 데이터가 섞이지 않았는지 검사 (빌드 후 실행) |
 | `npm run check:dist` | 배포 산출물 점검: `404.html`·`_redirects` 없음(Pages SPA 폴백), `_headers`가 현재 env와 일치, `index.html` 인라인 코드 없음, 비밀 키 값 없음, `robots.txt` |
 | `npm run check:builds` | 운영 빌드 변형 검증(임시 폴더, 끝나면 삭제): env 없음·가짜 Supabase env는 성공, service_role·`sb_secret_`·`SERVICE_ROLE` 이름·http·경로 있는 URL은 빌드 실패 |
 | `npm run verify` | typecheck → lint → test → test:db → build → check:seed → check:dist 순차 실행 |
+
+## CI
+
+`.github/workflows/ci.yml` — `main` push, `main` 대상 PR, 수동 실행(Actions 탭 → CI → Run workflow)에서 돕니다. 비밀 값을 쓰지 않습니다(Supabase env 없음 → 운영 빌드는 빈 상태 모드, E2E·CSP 스모크는 mock·가짜 env). 러너는 Ubuntu(UTC)이고 한 작업에서 차례로 실행합니다.
+
+1. `npm ci`(Node.js는 `.nvmrc`)
+2. `npm run verify` — 타입·린트·단위(UTC)·DB·빌드·seed·산출물
+3. `npm run test:tz` — 단위 테스트를 America/Los_Angeles로 한 번 더
+4. `npx playwright install --with-deps chromium` → `npm run test:e2e` → `npm run test:csp` → `npm run check:builds`
+5. 실패하면 Playwright HTML 리포트와 trace를 artifact로 올립니다(7일 보관)
+
+권한은 `contents: read`뿐이고, 같은 브랜치·PR에 새 실행이 오면 이전 실행을 취소합니다. 작업 제한 시간은 40분입니다. CI에서는 Playwright가 개발 서버를 새로 띄우고(`reuseExistingServer` 끔), 실패한 테스트를 1회 재시도합니다(E2E 테스트 제한 60초·`expect` 10초 — 로컬은 30초·5초).
+
+첫 push 뒤 Actions 탭에서 확인할 것:
+
+- 워크플로가 시작되는지(시작되지 않으면 저장소 Settings → Actions에서 Actions 허용 여부).
+- 로그의 actions 버전: `actions/checkout`·`actions/setup-node`·`actions/upload-artifact` 모두 `@v5`로 받아지는지, Node 런타임 사용 중단 경고가 없는지. 이 버전은 워크플로를 만들 때 확인하지 못했다.
+- `npm ci`가 오류 없이 끝나는지(Linux용 네이티브 패키지 포함), Node 버전이 `.nvmrc`(24.18.0)인지.
+- 통과 수: 단위 438(UTC·LA 각각), DB 232, E2E 69, CSP 5, 빌드 변형 15/15. `flaky`(재시도 후 통과) 표시가 있으면 원인을 본다.
+- 실패했다면 실행 화면 아래 Artifacts의 `playwright-report-attempt-<n>`을 받아 `npx playwright show-report <압축 푼 폴더>/playwright-report`(CSP는 `playwright-report/csp`) 또는 `npx playwright show-trace <trace.zip>`으로 연다.
+- 걸린 시간(예상 약 20분). 오래 걸리면 `timeout-minutes`를 조정한다.
 
 ## 데이터 모드
 
@@ -80,7 +123,7 @@ npx playwright install chromium
 | 예시사용자A | 예시 모임 2개 주최(승인 대기 신청 있음, 진행 중 모임 출석 체크), 확정·대기·완료·취소·거절 신청 내역 |
 | 예시사용자B | 신청 내역 없는 일반 사용자 (신청 흐름 확인용) |
 | 예시신규사용자 | 최초 설정(닉네임·약관 동의) 전 — 신청·만들기 시 `/profile?onboarding=1`로 안내 |
-| 예시관리계정 | 관리자 권한 — 마이 → "관리자 도구 열기"(`/admin`). mock은 이 계정만 관리자 메서드를 허용하고 나머지는 `NOT_ADMIN` |
+| 예시관리계정 | 관리자 권한 — 마이 → "관리자 도구 열기"(`/admin`). mock은 이 계정만 관리자 메서드를 허용하고 나머지는 `NOT_ADMIN`(관리자 취소는 DB처럼 없는·볼 수 없는 모임이면 `NOT_FOUND`가 먼저) |
 
 Google·카카오 버튼은 mock 모드에서 실제 OAuth로 연결되지 않고 테스트 계정 선택을 안내합니다.
 
@@ -168,8 +211,10 @@ src/
 supabase/                    migrations/(9개), seed.sql(개발 전용), tests/(PGlite DB 테스트·어댑터 계약 테스트)
 scripts/                     check-no-seed.mjs(빌드 결과 seed 유입 검사), bundle-migrations.mjs(db:bundle), race-test.ts(동시성, BLOCKED),
                              write-headers.mjs(빌드 후 dist/_headers 생성), check-dist.mjs(산출물 점검), check-builds.mjs(빌드 변형 검증),
-                             csp-preview.mjs(CSP 스모크용 빌드·미리보기 서버), lib/(security-headers: 보안 헤더 순수 함수, build-variant)
-e2e/                         Playwright 테스트(a11y·csp 포함), 스크린샷 스크립트. playwright.csp.config.ts는 CSP 스모크 전용
+                             csp-preview.mjs(CSP 스모크용 빌드·미리보기 서버), test-tz.mjs(test:tz — 다른 시스템 시간대로 단위 테스트),
+                             lib/(security-headers: 보안 헤더 순수 함수, build-variant)
+e2e/                         Playwright 테스트(a11y·csp·timezone 포함), 스크린샷 스크립트. playwright.csp.config.ts는 CSP 스모크 전용
+.github/workflows/ci.yml     GitHub Actions CI(README "CI")
 public/robots.txt            /admin·/auth/만 Disallow(보안 수단 아님). SPA 폴백은 _redirects 없이 Pages 기본 동작, _headers는 빌드 때 생성
 ```
 
@@ -250,5 +295,8 @@ public/robots.txt            /admin·/auth/만 Disallow(보안 수단 아님). S
 
 - Phase 5: 보안 헤더 생성(env 유무·잘못된 URL·헤더 조작 입력 거부), Zod jitless, 색 대비(토큰을 읽어 WCAG 비율 계산 — 알려진 예외 3쌍 기록), 소스 보안 감사(innerHTML·eval·service_role·console·storage·VITE_ 목록),
   역할×동작 매트릭스 DB 테스트(이용 제한·탈퇴 요청·관리자), E2E 접근성(axe serious·critical 0건, 키보드·포커스 트랩, 글자 200%), CSP 스모크(`npm run test:csp`), 빌드 변형(`npm run check:builds`). 결과: `docs/TEST_PLAN.md` §3·§9
+
+- 출시 전 마무리: 단위 테스트 전체를 시스템 시간대 America/Los_Angeles로 한 번 더(`npm run test:tz` — CI의 `npm run test`는 UTC), E2E `e2e/timezone.spec.ts`(브라우저 시간대 LA·UTC + `page.clock`으로 KST 자정 직전·직후 고정 — 날짜 칸의 오늘, 날짜 필터, 목록·상세 시각, 모임 만들기 날짜·시간 저장과 수정 화면 왕복),
+  관리자 취소의 판단 순서(없는·숨김 모임 `NOT_FOUND`가 `NOT_ADMIN`보다 먼저)를 mock·Supabase 어댑터 계약 테스트에서 같은 결과로 확인
 
 자동 테스트가 접근성·보안을 보장하지는 않습니다. 스크린리더 실기기 확인, hover 등 상태별 색 대비 전수 점검, Safari/iOS 실기기 확인은 아직 하지 않았습니다.

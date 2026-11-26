@@ -1051,7 +1051,11 @@ export function adminSetMeetingHidden(
   return { db: next, value: undefined };
 }
 
-/** 관리자 모임 취소: cancel_meeting과 같은 규칙(관리자는 종료 전까지). 관리자가 아니면 NOT_ADMIN */
+/**
+ * 관리자 모임 취소: cancel_meeting과 같은 규칙(관리자는 종료 전까지). 관리자가 아니면 NOT_ADMIN.
+ * 판단 순서도 DB cancel_meeting과 같다: 계정 확인(_require_actor — 로그인·탈퇴 요청이면 ACCOUNT_DELETION_REQUESTED)
+ * → 모임 존재(없거나 볼 수 없는 숨김 모임이면 NOT_FOUND) → 권한(관리자가 아니면 NOT_ADMIN — Supabase 어댑터가 DB의 NOT_HOST를 바꾼 코드).
+ */
 export function adminCancelMeeting(
   db: MockDb,
   actorId: string | null,
@@ -1059,8 +1063,9 @@ export function adminCancelMeeting(
   reason: string | null,
   now: Date,
 ): RuleResult<void> {
-  // DB cancel_meeting과 같은 순서: 계정 확인(_require_actor — 탈퇴 요청이면 ACCOUNT_DELETION_REQUESTED) → 관리자 확인
-  requireActor(db, actorId);
+  const actor = requireActor(db, actorId);
+  const meeting = findMeeting(db, meetingId);
+  if (!meeting || !canSeeMeeting(meeting, actor)) fail('NOT_FOUND');
   requireAdmin(db, actorId);
   return cancelMeeting(db, actorId, meetingId, reason, now);
 }

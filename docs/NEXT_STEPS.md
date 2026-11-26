@@ -1,6 +1,6 @@
 # 다음 할 일 — 출시 체크리스트
 
-상태: Phase 5 반영 (2026-11-25 — 코드·문서 준비 완료, 실제 배포는 사용자 결정·외부 설정·승인 후. 검수 반영: 관리자 권한의 계정 상태 문제는 마이그레이션 9로 결정·해결되어 결정 목록에서 뺐다)
+상태: 출시 전 마무리 반영 (2026-11-25 — 공개 Git 저장소 준비 완료, CI 워크플로 준비(푸시 전), 결정 항목 #11~#13 추가). Phase 5: 코드·문서 준비 완료, 실제 배포는 사용자 결정·외부 설정·승인 후. 관리자 권한의 계정 상태 문제는 마이그레이션 9로 결정·해결되어 결정 목록에서 뺐다
 
 관련 문서: [ROADMAP](./ROADMAP.md) · [DEPLOYMENT](./DEPLOYMENT.md) · [OPERATIONS](./OPERATIONS.md) · [SECURITY](./SECURITY.md) · [TEST_PLAN](./TEST_PLAN.md)
 
@@ -20,6 +20,9 @@
 | 8 | **글꼴 고정 방식**(아래 상세) — 정확한 버전 + SRI, 또는 자체 호스팅 | CSP에서 jsDelivr 제거 여부, 외부 의존 | 아래 "글꼴 결정" |
 | 9 | **이 PC의 전역 `NODE_TLS_REJECT_UNAUTHORIZED=0` 제거 권장**: Node·npm의 TLS 인증서 검증이 꺼져 있어 중간자 공격에 취약하다(npm은 패키지 integrity로 내용은 확인하지만 다른 요청은 보호되지 않음). 회사 프록시 때문이면 `NODE_EXTRA_CA_CERTS`로 사내 인증서를 추가하는 방식 권장. 저장소 설정은 바꾸지 않았다 | 개발 환경 보안 | [SECURITY §12](./SECURITY.md#12-의존성) |
 | 10 | 운영 설계 결정(출시 전 또는 직후): 신고 처리 목표 기간·이의제기 절차, 탈퇴 요청 없이 삭제된 계정의 미래 모임 처리, 카테고리 이름·순서 변경 화면, 모니터링 도구 도입 여부, 실제 공간 정보 수집·제보 경로 | 운영 | [OPERATIONS §3·§4·§7](./OPERATIONS.md#3-신고-처리-절차), [DB_SCHEMA §16](./DB_SCHEMA.md#16-미결-사항) |
+| 11 | **저장소 라이선스**: 공개 저장소에 LICENSE 파일이 없다. LICENSE가 없으면 공개돼 있어도 기본적으로 저작권자가 모든 권리를 가진다(남이 보기는 해도 복제·수정·재배포할 권리는 없음). 안: 오픈소스 라이선스(MIT·Apache-2.0 등)를 붙인다 / 소스 공개만 하고 LICENSE 없이 둔다(권리 보유 문구를 README에 적을지) / 저장소를 비공개로 돌린다 | 외부 기여·재사용 허용 범위, 공개 유지 여부 | 저장소 루트(LICENSE 없음), 아래 #12와 함께 결정 |
+| 12 | **디자인 시안 사진의 라이선스(공개 저장소에 이미 올라감)**: `hanpan_v3_design_lab.html`에 base64로 내장된 사진 4장(히어로 1장 — 보드게임 판 위의 손·말, 목록 썸네일 3장 — 칩·주사위, 카드, 타일 보드. 의뢰 메모에는 2장으로 적혀 있었으나 파일에는 서로 다른 JPEG 4개가 있음)과 그 시안을 찍은 `docs/screenshots/reference/lab-*.png` 6장. 출처·사용 권한을 확인하지 못했다(앱 화면에는 쓰지 않음 — README "히어로 이미지 교체"). 권한이 없거나 불분명하면 저장소에서 지워야 한다(사진을 뺀 시안으로 바꾸거나, 시안 파일·참고 스크린샷을 비공개 보관). **이미 푸시한 커밋(`6f4b396`) 기록에 남으므로** 새 커밋으로 지워도 과거 커밋·포크·캐시에서 볼 수 있다. 완전히 지우려면 기록을 다시 쓰고(`git filter-repo` 등) 강제 푸시해야 하며, 포크·복제본은 되돌릴 수 없다. `hanpan_v3_design_lab.html`은 루트 원본 문서라 이번 작업에서는 고치지 않았다 | 공개 유지, 저작권 위험 | README "히어로 이미지 교체", [UI_SPEC §3.3](./UI_SPEC.md#33-시안-대비-의도적-차이) |
+| 13 | (선택) **Dependabot 도입 여부**(의존성 보안 경고·자동 업데이트 PR). 켜면 `.github/dependabot.yml`(npm·github-actions 주기)을 추가하고 PR마다 CI가 돈다. 파일은 만들지 않았다. 보안 경고(Dependabot alerts)만 저장소 설정에서 켜는 방법도 있다 | 의존성·actions 버전 갱신 방식 | [SECURITY §12](./SECURITY.md#12-의존성), README "CI" |
 
 ### 글꼴 결정 (#8)
 
@@ -35,9 +38,10 @@
 
 ## 2. 외부 설정 (사용자 수행)
 
-순서와 화면별 값은 [DEPLOYMENT](./DEPLOYMENT.md)를 그대로 따른다. 모두 `BLOCKED:`(아직 하지 않음).
+순서와 화면별 값은 [DEPLOYMENT](./DEPLOYMENT.md)를 그대로 따른다. 1번 외에는 모두 `BLOCKED:`(아직 하지 않음).
 
-1. Git 원격 저장소 준비(Cloudflare Pages Git 연동용).
+1. ~~Git 원격 저장소 준비(Cloudflare Pages Git 연동용)~~ **완료**: 공개 GitHub 저장소 `Minani99/HANPAN`, 브랜치 `main`(첫 커밋 `6f4b396`). Pages Git 연동 때 이 저장소를 고른다. 공개 저장소라 #11·#12 결정이 필요하다.
+   - **CI**: `.github/workflows/ci.yml` 준비 완료(아직 푸시하지 않음). 이 파일이 들어간 커밋을 `main`에 푸시하거나 `main` 대상 PR을 열면 GitHub Actions에서 실행된다(수동 실행도 가능). 비밀 값이 필요 없다. 첫 실행 때 확인할 것은 README "CI".
 2. **개발용** Supabase 프로젝트 생성 → 마이그레이션 적용(seed 금지) → Auth URL(로컬·프리뷰 주소) → [DEPLOYMENT §3](./DEPLOYMENT.md#3-supabase-설정)
 3. Google OAuth 클라이언트(개발 프로젝트 콜백) → Supabase Google provider → [§4](./DEPLOYMENT.md#4-google-oauth)
 4. (선택) Kakao 앱 → 이메일 동의항목 요건 확인 → [§5](./DEPLOYMENT.md#5-kakao-oauth-선택)

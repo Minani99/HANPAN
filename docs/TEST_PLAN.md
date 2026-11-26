@@ -1,6 +1,6 @@
 # 테스트 계획
 
-상태: Phase 5 반영 (2026-11-25 — 접근성(axe·키보드·글자 200%)·CSP 스모크·빌드 변형·색 대비·소스 감사·산출물 점검·역할×동작 매트릭스 DB 테스트 추가, 최종 결과 §9). Phase 4: 공간·신고·관리자·정책, Phase 3: 어댑터 계약 테스트
+상태: 출시 전 마무리 반영 (2026-11-25 — GitHub Actions CI, 시간대 견고성(`npm run test:tz`, `e2e/timezone.spec.ts`), 관리자 취소 판단 순서 계약 단언, 결과 §10). Phase 5: 접근성(axe·키보드·글자 200%)·CSP 스모크·빌드 변형·색 대비·소스 감사·산출물 점검·역할×동작 매트릭스 DB 테스트(결과 §9). Phase 4: 공간·신고·관리자·정책, Phase 3: 어댑터 계약 테스트
 
 관련 문서: [DB_SCHEMA](./DB_SCHEMA.md) · [SECURITY](./SECURITY.md) · [UI_SPEC](./UI_SPEC.md) · [ARCHITECTURE](./ARCHITECTURE.md)
 
@@ -8,24 +8,29 @@
 
 | 레벨 | 도구 | 대상 | 명령 |
 |---|---|---|---|
-| 단위 | Vitest | `src/lib`(KST 날짜, 필터 쿼리, returnTo 검증, 외부 링크 https 확인, 마크다운 파서, 콘솔 직접 호출 금지, **소스 보안 감사·VITE_ 목록 일치**(`securityAudit.test.ts`), **Zod jitless**(`zodConfig.test.ts`)), **색 대비**(`src/styles/contrast.test.ts` — index.css 토큰을 읽어 WCAG 비율 계산, 알려진 예외 기록), **보안 헤더 생성**(`scripts/security-headers.test.ts` — env 유무·잘못된 URL·헤더 조작 거부), `src/domain`(meetingPhase, Zod 스키마 — 공간 선택·게임 연결 포함, 닉네임 예약어, 공간·신고 폼), 어댑터 팩토리, mock 규칙(공간·신고·관리자), Supabase 어댑터(오류 매핑·응답 검증·인자 변환·키 가드·인증 흐름·관리자 테이블 쓰기, 가짜 클라이언트) | `npm run test` |
+| 단위 | Vitest | `src/lib`(KST 날짜, 필터 쿼리, returnTo 검증, 외부 링크 https 확인, 마크다운 파서, 콘솔 직접 호출 금지, **소스 보안 감사·VITE_ 목록 일치**(`securityAudit.test.ts`), **Zod jitless**(`zodConfig.test.ts`)), **색 대비**(`src/styles/contrast.test.ts` — index.css 토큰을 읽어 WCAG 비율 계산, 알려진 예외 기록), **보안 헤더 생성**(`scripts/security-headers.test.ts` — env 유무·잘못된 URL·헤더 조작 거부), `src/domain`(meetingPhase, Zod 스키마 — 공간 선택·게임 연결 포함, 닉네임 예약어, 공간·신고 폼), 어댑터 팩토리, mock 규칙(공간·신고·관리자), Supabase 어댑터(오류 매핑·응답 검증·인자 변환·키 가드·인증 흐름·관리자 테이블 쓰기, 가짜 클라이언트) | `npm run test`, 다른 시스템 시간대로 `npm run test:tz` |
 | 컴포넌트 | Vitest + React Testing Library + jsdom | CTA 상태, 폼 오류, 다이얼로그 포커스, 빈·오류·로딩 상태, 신고 대화상자, 관리자 권한·탭, 공간 목록·상세(필터 줄 라벨·aria-labelledby), 정책 페이지, 전역 오류 경계, 계정 상태 안내 띠(이용 제한·탈퇴 요청 문구, active·비로그인 띠 없음) | `npm run test` |
 | DB | Vitest + PGlite | 마이그레이션, GRANT, RLS, RPC 규칙, 제약조건, `db:bundle` 결과, 역할×동작 매트릭스(이용 제한·탈퇴 요청·관리자 행 — `account-status.test.ts`) | `npm run test:db`(타입 검사 `tsconfig.db.json` + `vitest.db.config.ts`) |
 | 계약 | Vitest + PGlite + 실제 어댑터 | Supabase 어댑터 → 실제 SQL 함수(인자 이름·jsonb 키·응답 모양·오류 코드). §6 | `npm run test:db`에 포함(`supabase/tests/adapter-contract.test.ts`) |
 | 동시성 | `scripts/race-test.ts` + 실제 Postgres | 동시 신청·동시 승인 시 정원 초과 없음 | `node scripts/race-test.ts --confirm-dev-db`(`BLOCKED:` DB 필요, 절차 §4.1) |
-| E2E | Playwright(chromium), mock 모드 `--mode e2e` | 핵심 사용자 흐름, 뷰포트, URL 쿼리, **접근성**(`e2e/a11y.spec.ts`: axe 390·1280px serious·critical 0건, 키보드, 글자 200%) | `npm run test:e2e` |
+| E2E | Playwright(chromium), mock 모드 `--mode e2e` | 핵심 사용자 흐름, 뷰포트, URL 쿼리, **접근성**(`e2e/a11y.spec.ts`: axe 390·1280px serious·critical 0건, 키보드, 글자 200%), **시간대**(`e2e/timezone.spec.ts`: 브라우저 LA·UTC에서 KST 표시·필터·저장) | `npm run test:e2e` |
 | CSP 스모크 | Playwright(`playwright.csp.config.ts`) + 빌드 결과 + 생성 `_headers`(vite preview) | 주요 화면 CSP 위반 0건, 보안 헤더, 대조군(인라인 script·style 속성 차단 감지), 가짜 Supabase env의 connect-src·OAuth 이동 | `npm run test:csp`(별도 — verify에 없음) |
 | 빌드 변형 | `scripts/check-builds.mjs` | 임시 폴더에 운영 빌드: env 없음·가짜 Supabase env 성공(check:seed·check:dist), service_role·sb_secret_·SERVICE_ROLE 이름·http·경로 URL은 빌드 실패 | `npm run check:builds`(별도) |
 | 스크린샷 | Playwright `screenshots` 프로젝트 | 6개 뷰포트 시각 비교 + 글자 200% 대표 화면(phase5) | `npm run screenshots` |
 | 산출물 | `scripts/check-no-seed.mjs`, `scripts/check-dist.mjs` | `dist/`에 seed 마커 없음 / `404.html`·`_redirects` 없음, `_headers`가 현재 env와 일치, index.html 인라인 코드 없음, 비밀 키 값 없음, robots.txt | `npm run check:seed`, `npm run check:dist` |
 | 통합 | - | 타입 → 린트 → 테스트 → DB 테스트 → 빌드(+ `_headers`) → seed 점검 → 산출물 점검 | `npm run verify` |
+| CI | GitHub Actions(`.github/workflows/ci.yml`, ubuntu-24.04, UTC) | `npm ci` → verify → test:tz → Chromium 설치 → test:e2e → test:csp → check:builds, 실패 시 Playwright 리포트·trace artifact(7일) | `main` push·PR·수동 실행(README "CI") |
 | 수동 | 실제 브라우저·기기 | OAuth, 실기기 Safari, 스크린리더 | 체크리스트(§3, §4) |
 
 - 스크립트 이름은 현재 `package.json` 기준이다. DB 테스트 의존성: `@electric-sql/pglite`(devDependency). 동시성 스크립트 의존성: `pg`, `@types/pg`(devDependency).
 - 화면 테스트 설정(`vite.config.ts`)의 `include`는 `src/**/*.test.{ts,tsx}`뿐이다. `supabase/tests`는 `vitest.db.config.ts`(node 환경)로 따로 돈다. `npm run verify`에 `test:db`가 포함되어 있다(test 다음, build 전).
 - `supabase/tests/**`와 `scripts/**/*.ts`는 `npm run lint`(eslint.config.js)와 `npm run typecheck`(`tsconfig.json` references의 `tsconfig.db.json`)가 함께 검사한다. `test:db`도 시작할 때 `tsc -p tsconfig.db.json`을 한 번 더 돈다.
 - E2E는 mock 어댑터로 돈다. 실제 DB 규칙 검증은 DB 레벨이 담당한다(mock은 보안 경계가 아님).
-- 시간대: 날짜 관련 단위 테스트는 `TZ=UTC`와 `TZ=America/Los_Angeles`에서도 통과해야 한다.
+- 시간대: 앱은 기기 시간대와 관계없이 KST로 계산·표시·저장한다(`src/lib/date.ts` — 모든 변환이 `Intl.DateTimeFormat`의 `timeZone: 'Asia/Seoul'`). 확인 방법:
+  - 단위: `src/lib/date.test.ts`가 테스트 안에서 `process.env.TZ`를 UTC·America/Los_Angeles·Asia/Seoul·Pacific/Kiritimati로 바꿔 날짜 유틸을 검사한다. 단위·컴포넌트 테스트 **전체**는 CI에서 UTC(`npm run test`)와 America/Los_Angeles(`npm run test:tz`)로 두 번 돈다. 로컬에서 UTC는 `npm run test:tz -- UTC`.
+  - `npm run test:tz`(`scripts/test-tz.mjs`)는 자식 프로세스에 TZ를 직접 넘기고, 먼저 그 시간대가 적용되는지 확인한다(모르는 이름은 Node가 오류 없이 `Etc/Unknown`(UTC)으로 처리). 테스트 안에서도 `src/test/setup.ts`가 `HANPAN_TEST_TZ`와 실제 시간대를 비교해 다르면 실패한다.
+  - **주의(Windows Git Bash)**: `TZ=America/Los_Angeles npm run test`처럼 앞에 붙이면 MSYS가 `/`가 든 TZ 값을 Windows 프로그램에 넘기지 않아 **아무 표시 없이 KST로 돈다**(`TZ=UTC`는 넘어간다). 2026-11-25 확인 — Vitest 시작 시각 표시와 `node -e`로 확인.
+  - E2E: 기본은 `timezoneId: 'Asia/Seoul'`(playwright.config.ts). `e2e/timezone.spec.ts`만 LA·UTC로 바꾸고 `page.clock.install`로 KST 자정 직전(UTC 14:58)·직후(UTC 15:10)에 시작한다. 기대값은 앱 코드 없이 "KST = UTC+9"로 계산한다.
 
 ## 2. 필수 테스트 매핑 (마스터 프롬프트 8장)
 
@@ -34,7 +39,7 @@
 | 1 | 미로그인 사용자가 목록·상세를 볼 수 있다 | | | anon으로 `meetings`·`profiles` select 성공, 숨김 모임 미노출. 계약: 비로그인 어댑터로 목록·필터·상세 | 비로그인으로 `/`, `/meetings/:id` 진입 | 실 Supabase anon 조회(BLOCKED) |
 | 2 | 미로그인 신청 → 로그인 → 원래 모임 복귀 | returnTo 저장·검증(`//`, 백슬래시, 외부 URL 거부), Supabase 어댑터: 로그인 시작 시 returnTo 저장·`redirectTo`=현재 origin, 콜백 code 교환·주소 정리·returnTo 반환 | CTA가 `/login`으로 이동, `/auth/callback` 화면(가짜 클라이언트) | 계약: 비로그인 신청은 RPC 없이 `AUTH_REQUIRED` | 상세 → 로그인 → 개발용 계정 선택 → 같은 상세로 복귀 | 실제 Google OAuth 복귀(BLOCKED) |
 | 3 | A는 B의 모임을 수정·삭제할 수 없다 | | 수정 화면 권한 없음 상태 | 직접 update/delete 거부(권한 오류), `update_meeting`·`cancel_meeting`·`decide_participant` → `NOT_HOST` | B의 수정 URL 직접 접근 시 권한 없음 | |
-| 4 | 일반 계정은 관리자 API·데이터를 읽거나 바꿀 수 없다 | mock: 관리자 메서드 12종 `NOT_ADMIN`. Supabase 단위: `adminCancelMeeting`의 `NOT_HOST` → `NOT_ADMIN`(다른 코드는 그대로) | `/admin` 권한 없음(관리자 데이터 미요청) | `admin_*`(Phase 4 조회 RPC 4종 포함) → `NOT_ADMIN`·anon 42501, 이용 제한·탈퇴 요청 상태 관리자도 `NOT_ADMIN`(마이그레이션 9, `account-status.test.ts`), `audit_logs` select 0행, `admin_roles` select·insert 거부, venues insert 거부·update/delete 0행, categories update 0행, 숨김 모임 미노출. 계약: 관리자 메서드 전부 `NOT_ADMIN`(테이블 쓰기·관리자 취소 포함, 관리자 취소는 mock과 같은 코드인지 단언) | 일반 계정으로 `/admin` → 권한 없음, 프로필에 관리자 링크 없음 | 실 Supabase에서 동일 확인(BLOCKED) |
+| 4 | 일반 계정은 관리자 API·데이터를 읽거나 바꿀 수 없다 | mock: 관리자 메서드 12종 `NOT_ADMIN`(관리자 취소는 DB `cancel_meeting`과 같은 순서 — 계정 → 모임 존재 → 권한: 없는·숨김 모임은 `NOT_FOUND`가 먼저). Supabase 단위: `adminCancelMeeting`의 `NOT_HOST` → `NOT_ADMIN`(다른 코드는 그대로) | `/admin` 권한 없음(관리자 데이터 미요청) | `admin_*`(Phase 4 조회 RPC 4종 포함) → `NOT_ADMIN`·anon 42501, 이용 제한·탈퇴 요청 상태 관리자도 `NOT_ADMIN`(마이그레이션 9, `account-status.test.ts`), `audit_logs` select 0행, `admin_roles` select·insert 거부, venues insert 거부·update/delete 0행, categories update 0행, 숨김 모임 미노출. 계약: 관리자 메서드 전부 `NOT_ADMIN`(테이블 쓰기·관리자 취소 포함, 관리자 취소는 mock과 같은 코드인지 단언 — 없는·숨김 모임은 둘 다 `NOT_FOUND`) | 일반 계정으로 `/admin` → 권한 없음, 프로필에 관리자 링크 없음 | 실 Supabase에서 동일 확인(BLOCKED) |
 | 5 | 동일 계정 이중 신청 불가 | | 더블클릭 시 요청 1회 | 두 번째 `apply_to_meeting` → `ALREADY_APPLIED`, 직접 insert 거부, unique 제약 | 연속 클릭 후 상태 1건 | |
 | 6 | 1자리 남은 모임에 동시 신청 시 1명만 확정 | | | 순차 신청 시 두 번째는 `waitlisted`/`MEETING_FULL`, `pg_get_functiondef`에 `for update` 존재, `confirmed_count <= max` check 위반 insert 거부 | | `scripts/race-test.ts` 동시 N건(BLOCKED) |
 | 7 | 취소·마감·과거 모임에 규칙 위반 신청 불가 | | 각 상태 CTA 비활성 + 사유 | `MEETING_CANCELLED`, `MEETING_NOT_OPEN`, `MEETING_STARTED`, `OWN_MEETING`, `APPLICATION_REJECTED`, restricted → `ACCOUNT_RESTRICTED` | 마감 모임 상세 CTA | |
@@ -117,7 +122,7 @@
 - 실행: `npm run test:db` = `tsc -p tsconfig.db.json`(타입 검사) → `vitest run --config vitest.db.config.ts`. 전체 약 20초.
 - 하네스: `supabase/tests/harness.ts`([DB_SCHEMA §15](./DB_SCHEMA.md#15-db-테스트-하네스-pglite)). 파일마다 스텁+마이그레이션을 적용한 템플릿을 한 번 만들고 **테스트마다 `clone()`한 독립 DB**를 쓴다(테스트 간 상태 공유 없음). 역할 전환은 트랜잭션 단위(`asUser`/`asAnon`/`asOwner`)라 트랜잭션이 끝나면 역할·claims가 돌아온다.
 - 오류 검사 도우미: `expectRpcError(p, 'CODE', detail?)`(SQLSTATE P0001 + message), `expectPermissionDenied(p)`(42501), `expectSqlState(p, '23514')`.
-- 마지막 실행(2026-11-25, Phase 5 검수 반영): **13개 파일, 232개 테스트 통과, 실패 0**(계약 테스트 28개·`venues-admin.test.ts` 21개·`account-status.test.ts` 14개 포함). Phase 5 첫 보고 때는 227개. Phase 4 기준은 12개 파일 216개, Phase 3은 11개 파일 187개.
+- 마지막 실행(2026-11-25, 출시 전 마무리): **13개 파일, 232개 테스트 통과, 실패 0**(계약 테스트 28개 — 관리자 취소 판단 순서 단언을 기존 테스트에 추가해 개수는 그대로, `venues-admin.test.ts` 21개·`account-status.test.ts` 14개 포함). Phase 5 첫 보고 때는 227개. Phase 4 기준은 12개 파일 216개, Phase 3은 11개 파일 187개.
 
 | 파일 | 개수 | 내용 |
 |---|---|---|
@@ -168,7 +173,7 @@ Phase 2 스파이크(`@electric-sql/pglite` 0.6.0)에서 확인한 내용. `pgli
 - 결과는 `{ data, error: { code, message, details, hint }, status }`(void → `data: null`, 42501은 anon 401·로그인 403).
 - `.from('categories'|'regions').select(cols).eq(col, v).order(col)`만 지원. auth는 메모리 세션(`signInAs`/`signOutNow`)과 이벤트.
 
-검증하는 흐름(28개 — Phase 3 18개 + Phase 4 8개 + Phase 5 검수 2개): 공개 목록·상세·기준 데이터(프론트 상수와 동일), 필터(KST 날짜 경계 00:00/전날 23:30·카테고리·권역·검색어(게임명·권역명)·모집 중·정렬·페이지), 비로그인 신청·내 모임 → RPC 없이 `AUTH_REQUIRED`(어댑터를 거치지 않은 anon 직접 호출은 42501 → `PERMISSION_DENIED`), 없는 인자 이름 → `PGRST202`, 생성 → 신청(auto 확정·manual 대기) → 승인 → 신청 취소 → 모임 취소, 수정(전체 값 전송으로 선택 값 유지)·모집 마감/재개·`NOT_HOST`, 입력 검증 detail(`title`·`start_at`)·홀덤 동의, 중복 `ALREADY_APPLIED`·`OWN_MEETING`, 정원 초과 `waitlisted`/`MEETING_FULL`·승인 시 재검사, 내 모임(숨김 모임 joined.meeting = null), 참가자 목록 권한(`NOT_HOST`·숨김 `NOT_FOUND`), 출석 체크(시작 후 확정 게스트·`ATTENDANCE_WINDOW_CLOSED`·`NOT_HOST`), 모임장 계정 삭제(hostId·hostNickname null, `MEETING_NOT_OPEN`/`host_missing`), 온보딩(`PROFILE_INCOMPLETE` → 완료)·닉네임 중복·예약어·부분 수정, 관리자 여부, 탈퇴 요청(비식별화·이후 `ACCOUNT_DELETION_REQUESTED`·멱등), auth 이벤트 → 실제 `get_my_profile`로 SessionUser. Phase 4: 공개 공간 목록·필터·상세(비공개·잘못된 id null, 관리자도 공개만), `listMeetings({ venueId })`, 게임 연결 보존(`game_id` 유지 ↔ 이름 바꾸면 `game_name`), 신고 접수·중복·자기 신고·기타 본문·없는 대상·비로그인 RPC 미호출, 일반 사용자의 관리자 메서드 전부 `NOT_ADMIN`(테이블 insert 42501·update 0행 포함), 관리자 신고 목록·처리·모임 숨김 → 공개 목록에서 사라짐 → 해제·관리자 취소·audit 순서, 사용자 검색·상태 변경(본인·탈퇴 요청 불가), 공간 등록·수정·공개 전환(트리거 `created_by`)·검증 detail(`website_url`·`name`)·카테고리 비활성 → `listCategories`에서 빠짐·audit.
+검증하는 흐름(28개 — Phase 3 18개 + Phase 4 8개 + Phase 5 검수 2개): 공개 목록·상세·기준 데이터(프론트 상수와 동일), 필터(KST 날짜 경계 00:00/전날 23:30·카테고리·권역·검색어(게임명·권역명)·모집 중·정렬·페이지), 비로그인 신청·내 모임 → RPC 없이 `AUTH_REQUIRED`(어댑터를 거치지 않은 anon 직접 호출은 42501 → `PERMISSION_DENIED`), 없는 인자 이름 → `PGRST202`, 생성 → 신청(auto 확정·manual 대기) → 승인 → 신청 취소 → 모임 취소, 수정(전체 값 전송으로 선택 값 유지)·모집 마감/재개·`NOT_HOST`, 입력 검증 detail(`title`·`start_at`)·홀덤 동의, 중복 `ALREADY_APPLIED`·`OWN_MEETING`, 정원 초과 `waitlisted`/`MEETING_FULL`·승인 시 재검사, 내 모임(숨김 모임 joined.meeting = null), 참가자 목록 권한(`NOT_HOST`·숨김 `NOT_FOUND`), 출석 체크(시작 후 확정 게스트·`ATTENDANCE_WINDOW_CLOSED`·`NOT_HOST`), 모임장 계정 삭제(hostId·hostNickname null, `MEETING_NOT_OPEN`/`host_missing`), 온보딩(`PROFILE_INCOMPLETE` → 완료)·닉네임 중복·예약어·부분 수정, 관리자 여부, 탈퇴 요청(비식별화·이후 `ACCOUNT_DELETION_REQUESTED`·멱등), auth 이벤트 → 실제 `get_my_profile`로 SessionUser. Phase 4: 공개 공간 목록·필터·상세(비공개·잘못된 id null, 관리자도 공개만), `listMeetings({ venueId })`, 게임 연결 보존(`game_id` 유지 ↔ 이름 바꾸면 `game_name`), 신고 접수·중복·자기 신고·기타 본문·없는 대상·비로그인 RPC 미호출, 일반 사용자의 관리자 메서드 전부 `NOT_ADMIN`(테이블 insert 42501·update 0행 포함, 관리자 취소의 없는·숨김 모임은 계정 → 모임 존재 → 권한 순서라 `NOT_FOUND` — mock과 같은 결과), 관리자 신고 목록·처리·모임 숨김 → 공개 목록에서 사라짐 → 해제·관리자 취소·audit 순서, 사용자 검색·상태 변경(본인·탈퇴 요청 불가), 공간 등록·수정·공개 전환(트리거 `created_by`)·검증 detail(`website_url`·`name`)·카테고리 비활성 → `listCategories`에서 빠짐·audit.
 - 가짜 클라이언트는 Phase 4에서 (1) setof/table 반환 RPC를 PostgREST처럼 행 배열로, (2) `table('venues'|'categories').insert/update`를 `jsonb_populate_record`로 형 변환해 현재 역할(RLS 적용)로 실행하도록 넓혔다.
 
 - 모든 응답은 어댑터의 Zod 검증(`mapping.ts`)을 통과해야 하므로, SQL 출력 키·타입이 바뀌면 이 테스트가 실패한다.
@@ -189,6 +194,11 @@ Phase 2 스파이크(`@electric-sql/pglite` 0.6.0)에서 확인한 내용. `pgli
 9. (Phase 4, `e2e/phase4.spec.ts` 18개) 공간 목록 → 권역·유형 필터(URL·새로고침 유지) → 상세 → 외부 링크 https·`target=_blank`·`rel="noopener noreferrer"` / 모임 상세 장소명 → 공간 상세·예약 링크 / 로그인 사용자 모임 신고 → "신고가 접수됐어요" → 같은 대상 재신고 중복 안내 / 비로그인 신고 → 로그인 → 복귀 / 관리자 dev 계정: 프로필 → 관리자 도구 → 신고 상태·메모 저장 → 모임 숨김 → 탐색 목록에서 사라짐 → 해제 → 다시 보임 / 일반 계정 `/admin` 권한 없음·관리자 메뉴 없음 / 비로그인 `/admin` → 로그인 / 정책 3개 + 초안 배너 + 없는 slug 404 / 320px 공간 찾기 필터 줄 라벨(권역·유형) 보임·칩 높이 42px 이상·라벨과 칩 같은 줄 / 공간 목록·공간 상세·정책 3개·관리자 5개 탭·공간 등록 폼을 6개 뷰포트에서 가로 오버플로 없음.
 10. (Phase 5, `e2e/a11y.spec.ts` 17개) axe 390·1280px × (비로그인 화면 / 로그인 화면 / 관리자 화면) 6개, `region`·`heading-order` 0건 390·1280px 2개(홈 개발용 안내 띠·내 모임 두 탭·공간 등록 폼·이용 제한된 관리자의 계정 상태 안내 띠와 `/admin` 권한 없음), 키보드 7개(건너뛰기 링크 2, 헤더 Tab 순서 1280·390, 지역 선택·신청 대화상자 포커스 트랩·ESC·복귀, 관리자 탭 화살표 키), 글자 200% 390·1280px 2개. 결과는 §3.
 11. (Phase 5, `e2e/csp.spec.ts` 5개 — `npm run test:csp`, 빌드 결과 필요) [SECURITY §7](./SECURITY.md#7-보안-헤더와-csp).
+12. (출시 전 마무리, `e2e/timezone.spec.ts` 6개 = 3개 × 브라우저 시간대 America/Los_Angeles·UTC) 브라우저 시간대와 `Intl` 결과가 정말 바뀌었는지 먼저 확인 →
+    - KST 자정 직후(UTC 11-27 15:10 = KST 11-28 00:10, 기기 날짜는 11-27): 날짜 칸의 "오늘"이 토 11.28이고 금 11.27 칸이 없음, 날짜 필터 11.28 = 3시간 뒤 모임 1개(KST 03:30), 11.29 = 19:00·20:00 모임 2개(목록 행의 `time[datetime]`이 모두 그 KST 날짜), 목록·상세 시각 글자(`11.29 (일) · 19:00`, `2026년 11월 29일 (일)`, `오후 7:00 ~ 오후 9:30`).
+    - KST 자정 직전(UTC 14:58) → `page.clock.fastForward` 5분 → 다시 열기: 오늘이 금 11.27 → 토 11.28로 바뀜, 기기 날짜로는 11-27인 KST 새벽 모임이 11.28 필터에 들어감.
+    - 모임 만들기: 날짜 입력 `min`이 KST 오늘(11-28), 기본값이 KST 내일, KST 11-28 01:00으로 저장 → 상세 `time[datetime]` = `2026-11-27T16:00:00.000Z`·`2026년 11월 28일 (토)`·`오전 1:00 ~ 오전 3:00`, 탐색 11.28 필터 행 `11.28 (토) · 01:00`, 수정 화면 날짜·시간이 같은 값.
+    - 검출력: `getKstParts`가 기기 시간대를 쓰게 바꾼 변이에서 6개 모두 실패하는 것을 확인하고 되돌렸다(2026-11-25).
 
 ## 8. 결과 기록
 
@@ -210,3 +220,21 @@ Phase 2 스파이크(`@electric-sql/pglite` 0.6.0)에서 확인한 내용. `pgli
 
 새 테스트 종류: 보안 헤더 생성 단위 테스트, Zod jitless, 색 대비(토큰 파싱), 소스 보안 감사·VITE_ 목록 일치, 역할×동작 매트릭스 DB 테스트, 접근성 E2E(axe·키보드·글자 200%), CSP 스모크(빌드 결과 + 생성 헤더), 빌드 변형 검증, 산출물 점검(`check:dist`).
 미실행(`BLOCKED:`): 실제 Supabase(PostgREST·OAuth·RLS 실환경·동시 신청 경쟁 §4.1), 실제 Cloudflare Pages(헤더·SPA 딥링크), 스크린리더·실기기 Safari.
+
+## 10. 결과 (출시 전 마무리, 2026-11-25 실제 실행)
+
+CI 워크플로·시간대 테스트·mock 관리자 취소 순서 수정 뒤 이 PC(Windows, Node 24.18.0, 시스템 시간대 KST)에서 실행한 결과다. CI(GitHub Actions)에서는 아직 실행하지 않았다(푸시 전).
+
+| 명령 | 결과 | 비고 |
+|---|---|---|
+| `npm run verify` | 통과 | test **52개 파일 438개**, test:db **13개 파일 232개**(계약 테스트 28개 — 단언 추가, 개수 그대로), build, check:seed(54개 파일), check:dist |
+| `npm run test:tz -- UTC America/Los_Angeles` | **438개 통과 × 2** | 자식 프로세스의 시간대 확인: UTC(오프셋 0), America/Los_Angeles(1월 -480분·7월 -420분). 기본(`npm run test:tz`)은 LA만 |
+| `npm run test:e2e` | **69개 통과**(63 → 69) | `e2e/timezone.spec.ts` 6개 추가 |
+| `npm run test:csp` | **5개 통과** | |
+| `npm run check:builds` | **15/15 통과** | |
+| `CI=true TZ=UTC`로 test:e2e → test:csp | 69 + 5개 통과 | CI 설정 경로 확인: 개발 서버 새로 띄움, HTML 리포트 `playwright-report/`·`playwright-report/csp/`가 서로 덮어쓰지 않음, CSP 결과 `test-results/csp/` |
+| `CI=true TZ=UTC`, test:e2e `--workers=2` | 69개 통과, **3.9분** | CI 러너와 같은 worker 수로 시간 추정. 가장 긴 테스트 20.0초(참가자 관리 흐름 — mock 지연 300ms가 쌓임) → CI 제한 60초 여유. 러너 CPU가 더 느리면 더 걸린다 |
+| `npm run screenshots` | 미실행 | 화면 모양 변경 없음 |
+
+- 검출력: `getKstParts`를 기기 시간대로 바꾼 변이 → `e2e/timezone.spec.ts` 6개 모두 실패. mock `adminCancelMeeting`을 이전 순서로 되돌린 변이 → 계약 테스트·mock 단위 테스트 각 1개 실패(`NOT_ADMIN` ≠ `NOT_FOUND`). 둘 다 되돌림.
+- CI 워크플로: YAML은 playwright-core에 들어 있는 `yaml` 파서로 엄격 모드(중복 키 금지) 파싱 통과, 단계의 `npm run` 대상이 package.json에 모두 있음. GitHub에서의 실제 실행·actions 버전(v5)은 미확인(첫 실행 때 확인 — README "CI").

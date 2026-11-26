@@ -15,8 +15,11 @@ export default defineConfig({
   testMatch: /csp\.spec\.ts/,
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
-  retries: 0,
-  reporter: [['list']],
+  // CI: 글꼴 CDN(jsDelivr) 응답도 확인하므로 네트워크 일시 오류에 1회 재시도(재시도 후 통과는 flaky로 표시된다)
+  retries: process.env.CI ? 1 : 0,
+  // E2E(playwright.config.ts)의 test-results/·playwright-report/와 겹치지 않게 하위 폴더에 둔다(CI 실패 시 둘 다 올림 — .github/workflows/ci.yml)
+  outputDir: './test-results/csp',
+  reporter: process.env.CI ? [['list'], ['html', { open: 'never', outputFolder: 'playwright-report/csp' }]] : [['list']],
   globalTeardown: './e2e/csp-teardown.ts',
   use: {
     locale: 'ko-KR',

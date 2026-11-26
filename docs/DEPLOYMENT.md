@@ -25,7 +25,7 @@
 | Supabase 계정·프로젝트(운영용 1, 개발·프리뷰용 1 권장) | `BLOCKED:` 미생성. `미확인:` 무료 플랜 프로젝트 수·비활성 일시중지 정책 |
 | Google Cloud 프로젝트(OAuth 클라이언트) | `BLOCKED:` |
 | Kakao Developers 앱(선택) | `BLOCKED:` |
-| Git 원격 저장소(Cloudflare Pages Git 연동 시) | `BLOCKED:` 원격 저장소 미정 |
+| Git 원격 저장소(Cloudflare Pages Git 연동 시) | 준비됨: 공개 GitHub 저장소 `Minani99/HANPAN`, 프로덕션 브랜치 `main`. CI 워크플로(`.github/workflows/ci.yml`)는 푸시하면 실행된다(README "CI") |
 | Cloudflare 계정 | `BLOCKED:` |
 | 운영 도메인 | `BLOCKED:` 브랜드·도메인 미정. 그 전에는 `<프로젝트>.pages.dev` 사용 |
 | 운영 이메일(OAuth 동의 화면 지원 이메일, 문의 창구) | `BLOCKED:` |
@@ -271,7 +271,7 @@ values (null, 'admin.role_revoke', 'user', '<user-id>', '{"via":"sql_editor"}');
 ## 11. 배포 전 체크리스트
 
 - [ ] `npm run verify` 통과(타입·린트·단위·DB(계약 포함)·빌드·seed 점검·산출물 점검) — 결과를 CHANGELOG에 기록
-- [ ] `npm run test:e2e`, `npm run test:csp`, `npm run check:builds` 통과
+- [ ] `npm run test:e2e`, `npm run test:csp`, `npm run check:builds` 통과(배포할 커밋의 GitHub Actions CI 통과로 대신할 수 있다 — `npm run test:tz` 포함)
 - [ ] `dist/`에 실제 비밀 키 값이 없음 — `npm run check:dist`(role이 anon이 아닌 JWT·`sb_secret_` 키 값이 있으면 실패)
 - [ ] 운영 Supabase: 마이그레이션 적용, 모든 테이블 RLS 활성, seed 미적용
 - [ ] Auth Site URL·Redirect URLs(운영은 정확한 주소만), Google(·Kakao) 로그인 왕복 확인
